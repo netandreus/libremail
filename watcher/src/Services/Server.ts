@@ -1,10 +1,13 @@
-import DatabaseConnection from "./DatabaseConnection";
+import DatabaseConnection from "../Connection/DatabaseConnection";
 import Account from "../Entity/Account";
+import ImapConnection, {OnExpunge, OnMail, OnUpdate} from "../Connection/ImapConnection";
+import {ImapSimple} from "imap-simple";
 
 export default class Server
 {
-    private dbConnection: DatabaseConnection;
+    private _dbConnection: DatabaseConnection;
     private _accounts: Account[];
+    private _imapConnections: ImapConnection[];
 
     constructor(dbConnection: DatabaseConnection) {
         this.dbConnection = dbConnection;
@@ -19,11 +22,47 @@ export default class Server
         return this._accounts;
     }
 
+    async connectToAllImaps(onMail?: OnMail, onUpdate?: OnUpdate, onExpunge?: OnExpunge): Promise<any>
+    {
+        let promises: Promise<ImapSimple>[];
+        this.imapConnections = this.accounts.map((account: Account) => {
+            return new ImapConnection(
+                account,
+                Boolean(process.env.MAIL_TLS),
+                Number(process.env.MAIL_AUTH_TIMEOUT),
+                onMail,
+                onUpdate,
+                onExpunge
+            );
+        });
+        promises = this.imapConnections.map((connection: ImapConnection) => {
+            return connection.connect();
+        });
+        await Promise.all(promises);
+    }
+
     get accounts(): Account[] {
         return this._accounts;
     }
 
     set accounts(value: Account[]) {
         this._accounts = value;
+    }
+
+
+    get dbConnection(): DatabaseConnection {
+        return this._dbConnection;
+    }
+
+    set dbConnection(value: DatabaseConnection) {
+        this._dbConnection = value;
+    }
+
+    get imapConnections(): ImapConnection[] {
+        return this._imapConnections;
+    }
+
+    set imapConnections(value: ImapConnection[]) {
+        this._imapConnections = value;
     }
 }
