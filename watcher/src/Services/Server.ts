@@ -1,6 +1,6 @@
 import DatabaseConnection from "../Connection/DatabaseConnection";
 import Account from "../Entity/Account";
-import ImapConnection, {OnExpunge, OnMail, OnUpdate} from "../Connection/ImapConnection";
+import ImapConnection, {OnError, OnExpunge, OnMail, OnUpdate} from "../Connection/ImapConnection";
 import {ImapSimple} from "imap-simple";
 
 export default class Server
@@ -22,7 +22,7 @@ export default class Server
         return this._accounts;
     }
 
-    async connectToAllImaps(onMail?: OnMail, onUpdate?: OnUpdate, onExpunge?: OnExpunge): Promise<any>
+    async connectToAllImaps(onConnectionError: OnError, onMail?: OnMail, onUpdate?: OnUpdate, onExpunge?: OnExpunge): Promise<any>
     {
         let promises: Promise<ImapSimple>[];
         this.imapConnections = this.accounts.map((account: Account) => {
@@ -38,7 +38,7 @@ export default class Server
         promises = this.imapConnections.map((connection: ImapConnection) => {
             return connection.connect();
         });
-        await Promise.all(promises);
+        await Promise.all(promises).catch(onConnectionError);
     }
 
     get accounts(): Account[] {

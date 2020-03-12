@@ -21,6 +21,10 @@ dotEnv.config();
     let databaseConnection = new DatabaseConnection(mysqlOptions);
 
     // Callbacks for events
+    let onConnectionError = function (err: Error) {
+        console.log('[ ERROR ] Can not connect to one ore more accounts. Server response: '+err.message);
+        process.exit(1);
+    };
     let onMail: OnMail = function (this: ImapConnection, numNewMail: number) {
         console.log('[ Event ] There is '+numNewMail+' new message(s) in account '+this.account.email);
     };
@@ -41,7 +45,7 @@ dotEnv.config();
     await server.loadAccounts();
     console.log('Loaded '+server.accounts.length+' accounts');
 
-    await server.connectToAllImaps(onMail, onUpdate, onExpunge);
+    await server.connectToAllImaps(onConnectionError, onMail, onUpdate, onExpunge);
     console.log('Connected to '+server.imapConnections.length+' imap servers.');
 })();
 
