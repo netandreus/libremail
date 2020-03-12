@@ -28,6 +28,7 @@ export default class ImapConnection
     private readonly connectOptions: ConnectionOptions;
     private _account: Account;
     private _imap?: ImapSimple;
+    private _connected: boolean;
     private _onMail: OnMail;
     private _onUpdate: OnUpdate;
     private _onExpunge: OnExpunge;
@@ -91,6 +92,7 @@ export default class ImapConnection
         this.onEnd = this.onEnd.bind(this);
 
         this.imap = null;
+        this.connected = false;
     }
 
     async connect(): Promise<ImapSimple>
@@ -109,6 +111,7 @@ export default class ImapConnection
 
         // If we does not call openBox - we can't receive events.
         await this.imap.openBox('INBOX');
+        this.connected = true; // After openBox(!), to prevent first 'mail' event, during openBox
         return this.imap;
     }
 
@@ -199,5 +202,13 @@ export default class ImapConnection
 
     set onEnd(value: OnEnd) {
         this._onEnd = value;
+    }
+
+    get connected(): boolean {
+        return this._connected;
+    }
+
+    set connected(value: boolean) {
+        this._connected = value;
     }
 }

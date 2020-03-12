@@ -1,3 +1,7 @@
+/**
+ * IMAP watcher server
+ * @author Andrey Tokarchuk <netandreus@gmail.com>
+ */
 import "reflect-metadata";
 import {container} from "tsyringe";
 import dotEnv = require('dotenv');
@@ -26,7 +30,9 @@ dotEnv.config();
         process.exit(1);
     };
     let onMail: OnMail = function (this: ImapConnection, numNewMail: number) {
-        console.log('[ Event ] There is '+numNewMail+' new message(s) in account '+this.account.email);
+        if (this.connected) {
+            console.log('[ Event ] There is '+numNewMail+' new message(s) in account '+this.account.email);
+        }
     };
     let onUpdate: OnUpdate = function (this: ImapConnection, seqno: any, info: any) {
         console.log('[ Event ] Update message seqno: '+seqno+' in account '+this.account.email);
