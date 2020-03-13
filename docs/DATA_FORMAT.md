@@ -62,11 +62,15 @@ CREATE TABLE IF NOT EXISTS `folders` (
   `account_id` int(10) unsigned NULL,
   `name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `count` int(10) unsigned DEFAULT '0',
-  `synced` int(10) unsigned DEFAULT '0'
+  `sync_status` ENUM('not_synced','syncing', 'syncing_need_resync','synced','synced') NOT NULL DEFAULT 'not_synced',
+  `sync_host` VARCHAR(100) NULL,
+  `sync_pid` INT NULL,
+  `synced` int(10) unsigned DEFAULT '0',
   `uid_validity` int(10) unsigned DEFAULT '0',
   `deleted` tinyint(1) unsigned DEFAULT '0',
   `ignored` tinyint(1) unsigned DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
+  `synced_at` TIMESTAMP NULL,
   PRIMARY KEY (`id`),
   UNIQUE( `account_id`, `name` )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -77,6 +81,9 @@ CREATE TABLE IF NOT EXISTS `folders` (
 - `name` Full global name of the folder as saved on the IMAP server. For
    example, this would be 'Accounts/Listserv/LibreMail' instead of 'LibreMail'.
 - `count` Total number of messages in the folder.
+- `sync_status` Current sync status of this folder
+- `sync_host` Last synchronized host
+- `sync_pid` Pid (process id) of last synchronized sync utility
 - `synced` Number of messages that have been downloaded for this folder.
 - `uid_validity` The UIDVALIDITY flag on the IMAP folder. This is used with
    the message's unique ID to uniquely identify a message across sessions.
@@ -86,6 +93,7 @@ CREATE TABLE IF NOT EXISTS `folders` (
    locally. Any folder with this flag set to 1 should not have its messages
    downloaded.
 - `created_at` Timestamp denoting when the folder was added to the database.
+- `synced_at` Last synchronization timestamp
 
 ## Messages
 

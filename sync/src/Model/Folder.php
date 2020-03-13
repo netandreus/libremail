@@ -21,11 +21,15 @@ class Folder extends Model
     public $id;
     public $name;
     public $count;
+    public $sync_status;
+    public $sync_host;
+    public $sync_pid;
     public $synced;
     public $deleted;
     public $ignored;
     public $account_id;
     public $created_at;
+    public $synced_at;
     public $uid_validity;
 
     const DRAFTS = [
@@ -47,7 +51,8 @@ class Folder extends Model
             'ignored' => $this->ignored,
             'account_id' => $this->account_id,
             'created_at' => $this->created_at,
-            'uid_validity' => $this->uid_validity
+            'uid_validity' => $this->uid_validity,
+            'sync_status' => $this->sync_status
         ];
     }
 
@@ -353,7 +358,7 @@ class Folder extends Model
         }
 
         $updated = $this->db()
-            ->update(['status' => $status])
+            ->update(['sync_status' => $status])
             ->table('folders')
             ->where('id', '=', $this->getId())
             ->execute();
@@ -362,16 +367,113 @@ class Folder extends Model
     }
 
     /**
+     * @param string $status
+     * @param string $host
+     * @param int $pid
+     * @return int
+     * @throws DatabaseUpdateException
+     */
+    public function updateSyncData(string $status, string $host, int $pid)
+    {
+        if (!in_array($status, FolderSyncStatus::getValues())) {
+            throw new \LogicException("Unsupported folder sync status '{$status}'");
+        }
+        $data = [
+            'sync_status' => $status,
+            'sync_host' => $host,
+            'sync_pid' => $pid
+        ];
+        if ($status == FolderSyncStatus::Synced) {
+            // In UTC
+            $now = new \DateTime();
+            $date = date('Y-m-d H:i:s', $now->getTimestamp());
+            $data['synced_at'] = $date;
+        }
+        $updated = $this->db()
+            ->update($data)
+            ->table('folders')
+            ->where('id', '=', $this->getId())
+            ->execute();
+        $this->errorHandle($updated);
+        return $updated;
+
+    }
+
+    /**
      * @return string
      */
     public function getStatus()
     {
         $row = $this->db()
-            ->select(['status'])
+            ->select(['sync_status'])
             ->from('folders')
             ->where('id', '=', $this->getId())
             ->execute()
             ->fetch();
-        return $row ? $row['status'] : FolderSyncStatus::__default;
+        return $row ? $row['sync_status'] : FolderSyncStatus::__default;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSyncStatus(): string
+    {
+        return $this->sync_status;
+    }
+
+    /**
+     * @param mixed $sync_status
+     */
+    public function setSyncStatus(string $sync_status)
+    {
+        $this->sync_status = $sync_status;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSyncHost()
+    {
+        return $this->sync_host;
+    }
+
+    /**
+     * @param mixed $sync_host
+     */
+    public function setSyncHost($sync_host)
+    {
+        $this->sync_host = $sync_host;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSyncPid()
+    {
+        return $this->sync_pid;
+    }
+
+    /**
+     * @param mixed $sync_pid
+     */
+    public function setSyncPid($sync_pid)
+    {
+        $this->sync_pid = $sync_pid;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSyncedAt()
+    {
+        return $this->synced_at;
+    }
+
+    /**
+     * @param mixed $synced_at
+     */
+    public function setSyncedAt($synced_at)
+    {
+        $this->synced_at = $synced_at;
     }
 }

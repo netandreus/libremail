@@ -8,6 +8,8 @@ import dotEnv = require('dotenv');
 import DatabaseConnection from "./Connection/DatabaseConnection";
 import Server from "./Services/Server";
 import ImapConnection, {OnExpunge, OnMail, OnUpdate} from "./Connection/ImapConnection";
+import { exec } from 'ts-process-promises';
+import * as os from 'os';
 
 dotEnv.config();
 
@@ -15,6 +17,7 @@ dotEnv.config();
     /**
      * Init services
      */
+    let hostname = os.hostname();
     // DatabaseConnection
     let mysqlOptions = {
         host: process.env.DB_HOST,
@@ -29,9 +32,19 @@ dotEnv.config();
         console.log('[ ERROR ] Can not connect to one ore more accounts. Server response: '+err.message);
         process.exit(1);
     };
-    let onMail: OnMail = function (this: ImapConnection, numNewMail: number) {
+    let onMail: OnMail = async function (this: ImapConnection, numNewMail: number) {
         if (this.connected) {
+            let command = process.env.SYNC_PATH + ' --email '+this.account.email+' --folder INBOX --once';
             console.log('[ Event ] There is '+numNewMail+' new message(s) in account '+this.account.email);
+            try {
+                await exec(command).on('process', (process) => {
+                    console.log('[ RUNNING ] SYNC pid = '+process.pid);
+                });
+            } catch (err) {
+                console.log('[ ERROR ] ' +err);
+            } finally {
+                console.log('[ COMPLETE ] Sync complete for '+this.account.email);
+            }
         }
     };
     let onUpdate: OnUpdate = function (this: ImapConnection, seqno: any, info: any) {

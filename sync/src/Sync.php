@@ -664,13 +664,21 @@ class Sync
             $this->stats->setActiveFolder($folder->name);
 
             try {
-                $folder->updateStatus(FolderSyncStatus::Syncing);
+                $folder->updateSyncData(
+                    FolderSyncStatus::Syncing,
+                    gethostname(),
+                    getmypid()
+                );
                 $this->syncFolderMessages($account, $folder, $options);
                 // We received new 'mail' / 'update' / 'purge' event from IMAP server, during sync process.
                 if ($folder->getStatus() == FolderSyncStatus::SyncingNeedResync) {
                     $this->syncFolderMessages($account, $folder, $options);
                 }
-                $folder->updateStatus(FolderSyncStatus::Synced);
+                $folder->updateSyncData(
+                    FolderSyncStatus::Synced,
+                    gethostname(),
+                    getmypid()
+                );
             } catch (MessagesSyncException $e) {
                 $this->log->error($e->getMessage());
             }
@@ -760,16 +768,32 @@ class Sync
             $messageSync->run($account, $folder, $selectStats, $options);
             $this->checkForHalt();
         } catch (PDOException $e) {
-            $folder->updateStatus(FolderSyncStatus::Error);
+            $folder->updateSyncData(
+                FolderSyncStatus::Error,
+                gethostname(),
+                getmypid()
+            );
             throw $e;
         } catch (StopException $e) {
-            $folder->updateStatus(FolderSyncStatus::Error);
+            $folder->updateSyncData(
+                FolderSyncStatus::Error,
+                gethostname(),
+                getmypid()
+            );
             throw $e;
         } catch (TerminateException $e) {
-            $folder->updateStatus(FolderSyncStatus::Error);
+            $folder->updateSyncData(
+                FolderSyncStatus::Error,
+                gethostname(),
+                getmypid()
+            );
             throw $e;
         } catch (Exception $e) {
-            $folder->updateStatus(FolderSyncStatus::Error);
+            $folder->updateSyncData(
+                FolderSyncStatus::Error,
+                gethostname(),
+                getmypid()
+            );
             $this->stats->unsetActiveFolder();
             $this->log->error(substr($e->getMessage(), 0, 500));
             $this->checkForClosedConnection($e);
