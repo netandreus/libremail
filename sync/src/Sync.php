@@ -664,21 +664,7 @@ class Sync
             $this->stats->setActiveFolder($folder->name);
 
             try {
-                $folder->updateSyncData(
-                    FolderSyncStatus::Syncing,
-                    gethostname(),
-                    getmypid()
-                );
                 $this->syncFolderMessages($account, $folder, $options);
-                // We received new 'mail' / 'update' / 'purge' event from IMAP server, during sync process.
-                if ($folder->getStatus() == FolderSyncStatus::SyncingNeedResync) {
-                    $this->syncFolderMessages($account, $folder, $options);
-                }
-                $folder->updateSyncData(
-                    FolderSyncStatus::Synced,
-                    gethostname(),
-                    getmypid()
-                );
             } catch (MessagesSyncException $e) {
                 $this->log->error($e->getMessage());
             }
@@ -739,6 +725,7 @@ class Sync
 
         $this->log->debug(
             "Syncing messages in {$folder->name} for {$account->email}");
+
         $this->log->debug(
             'Memory usage: '.Fn\formatBytes(memory_get_usage()).
             ', real usage: '.Fn\formatBytes(memory_get_usage(true)).
@@ -765,7 +752,28 @@ class Sync
             // Select the folder's mailbox, this is sent to the
             // messages sync library to perform operations on
             $selectStats = $this->mailbox->select($folder->name);
+            if (! Fn\get($options, Sync::OPT_SKIP_DOWNLOAD)) {
+                $folder->updateSyncData(
+                    FolderSyncStatus::Syncing,
+                    gethostname(),
+                    getmypid()
+                );
+            }
             $messageSync->run($account, $folder, $selectStats, $options);
+            /**
+             * If watcher received imap event and mark this folder to resync
+             * after sync is started => make sync one more time.
+             */
+            if ($folder->getActualSyncStatus() == FolderSyncStatus::SyncingNeedResync) {
+                $messageSync->run($account, $folder, $selectStats, $options);
+            }
+            if (! Fn\get($options, Sync::OPT_SKIP_DOWNLOAD)) {
+                $folder->updateSyncData(
+                    FolderSyncStatus::Synced,
+                    gethostname(),
+                    getmypid()
+                );
+            }
             $this->checkForHalt();
         } catch (PDOException $e) {
             $folder->updateSyncData(

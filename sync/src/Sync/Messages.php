@@ -7,7 +7,7 @@
 namespace App\Sync;
 
 use Fn;
-use App\Sync;
+use App\Enum\FolderSyncStatus;use App\Sync;
 use App\Stats;
 use Exception;
 use PDOException;
@@ -99,7 +99,6 @@ class Messages
             $folder->saveUidValidity($uidValidity);
             $this->markDeletedAndPurged($folder);
         }
-
         $newIds = $this->mailbox->getUniqueIds();
 
         $this->updateMessageNumbers($newIds, $savedIds, $folder);
@@ -174,7 +173,6 @@ class Messages
 
         // Sort these newest first to get the new mail earlier
         arsort($toDownload);
-
         foreach ($toDownload as $messageId => $uniqueId) {
             $this->downloadMessage($messageId, $uniqueId, $folder);
 
@@ -199,7 +197,6 @@ class Messages
             $this->emitter->emit(Sync::EVENT_GARBAGE_COLLECT);
             $this->emitter->emit(Sync::EVENT_CHECK_HALT);
         }
-
         $this->emitter->emit(Sync::EVENT_GARBAGE_COLLECT);
     }
 

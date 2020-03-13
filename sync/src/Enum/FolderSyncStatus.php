@@ -24,6 +24,13 @@ class FolderSyncStatus {
     const SyncingNeedResync = 'syncing_need_resync';
 
     /**
+     * This folder is just synced, another folder of the same account is syncing now.
+     * That means, that sync is running now for this account.
+     * After account sync is complete we need to resync this folder, because watcher tell us, that folder is changed.
+     */
+    const SyncedNeedResync = 'synced_need_resync';
+
+    /**
      * Sync process completed and there is no new events received from imap server ("mail" / "update" / "purge").
      */
     const Synced = 'synced';
@@ -37,10 +44,10 @@ class FolderSyncStatus {
         self::NotSynced  => 'Not synced',
         self::Syncing   => 'Syncing',
         self::SyncingNeedResync  => 'Syncing but need resync',
+        self::SyncedNeedResync  => 'Synced but need resync',
         self::Synced => 'Synced',
         self::Error => 'Error'
     ];
-
 
     public static function getValues(): array
     {

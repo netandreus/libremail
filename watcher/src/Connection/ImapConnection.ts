@@ -1,5 +1,9 @@
 import {ImapSimple, Message} from "imap-simple";
 import Account from "../Entity/Account";
+import {exec} from "ts-process-promises";
+import {container} from "tsyringe";
+import DatabaseConnection from "./DatabaseConnection";
+import Server from "../Services/Server";
 let imaps = require('imap-simple');
 // @see https://github.com/mscdex/node-imap#connection-events
 export type OnMail = (numNewMail: number) => void;
@@ -211,4 +215,27 @@ export default class ImapConnection
     set connected(value: boolean) {
         this._connected = value;
     }
+
+    /**
+     * @param email
+     * @param folder
+     */
+    public async runSync(email?: string, folder?: string)
+    {
+        let command = process.env.SYNC_PATH + ' --once';
+        if (email) {
+            command += ' --email '+this.account.email;
+        }
+        if (folder) {
+            command += ' --folder '+folder
+        }
+        await exec(command).on('process', (process) => {
+            console.log('[ RUNNING ] SYNC pid = '+process.pid);
+        }).then((result) => {
+            console.log('[ COMPLETE ] Sync complete for '+email);
+        }).error((error) => {
+            console.log('[ ERROR ] ' + error);
+        });
+    }
+
 }

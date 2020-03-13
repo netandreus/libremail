@@ -2,6 +2,13 @@ import DatabaseConnection from "../Connection/DatabaseConnection";
 import Account from "../Entity/Account";
 import ImapConnection, {OnError, OnExpunge, OnMail, OnUpdate} from "../Connection/ImapConnection";
 import {ImapSimple} from "imap-simple";
+import * as os from "os";
+
+export type SyncingInfo = {
+    sync_status: string,
+    sync_host: string,
+    sync_pid: number
+};
 
 export default class Server
 {
@@ -64,5 +71,35 @@ export default class Server
 
     set imapConnections(value: ImapConnection[]) {
         this._imapConnections = value;
+    }
+
+    async getFolderSyncInfo(account: Account, folder: string): Promise<SyncingInfo>
+    {
+        let [rows, fields] = await this.dbConnection.query(
+            "SELECT sync_status, sync_host, sync_pid FROM folders WHERE account_id = ? AND name = ?",
+            [account.id, folder]
+        );
+        return rows[0];
+    }
+
+    /**
+     * Is some folder of this account is syncing now?
+     * @param account
+     */
+    async isAccountSyncing(account: Account): Promise<boolean>
+    {
+        let sql =
+            "SELECT COUNT(id) as syncing_folders_count " +
+            "FROM `folders` " +
+            "WHERE account_id = ? AND sync_status IN ('syncing', 'syncing_need_resync')";
+        let [rows, fields] = await this.dbConnection.query(sql, [account.id]);
+        let count = rows[0]['syncing_folders_count'];
+        return (count > 0)? true : false;
+    }
+
+    async updateFolderStatus(account: Account, folder: string, status: string): Promise<void>
+    {
+        let sql = "UPDATE `folders` SET sync_status = ? WHERE account_id = ? AND name = ?";
+        await this.dbConnection.query(sql, [status, account.id, folder]);
     }
 }

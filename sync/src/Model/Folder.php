@@ -187,6 +187,7 @@ class Folder extends Model
 
             $data['count'] = $this->getCount();
             $data['synced'] = $this->getSynced();
+            $data['sync_status'] = $this->getActualSyncStatus();
 
             $updated = $this->db()
                 ->update($data)
@@ -378,6 +379,7 @@ class Folder extends Model
         if (!in_array($status, FolderSyncStatus::getValues())) {
             throw new \LogicException("Unsupported folder sync status '{$status}'");
         }
+        $this->setSyncStatus($status);
         $data = [
             'sync_status' => $status,
             'sync_host' => $host,
@@ -402,7 +404,7 @@ class Folder extends Model
     /**
      * @return string
      */
-    public function getStatus()
+    public function getActualSyncStatus()
     {
         $row = $this->db()
             ->select(['sync_status'])

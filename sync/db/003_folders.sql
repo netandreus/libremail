@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `folders` (
   `account_id` int(10) unsigned NULL,
   `name` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `count` int(10) unsigned DEFAULT '0',
-  `sync_status` ENUM('not_synced','syncing', 'syncing_need_resync','synced','synced') NOT NULL DEFAULT 'not_synced',
+  `sync_status` ENUM('not_synced','syncing','syncing_need_resync','synced_need_resync','synced','synced') NOT NULL DEFAULT 'not_synced',
   `sync_host` VARCHAR(100) NULL,
   `sync_pid` INT NULL,
   `synced` int(10) unsigned DEFAULT '0',

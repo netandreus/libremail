@@ -19,6 +19,7 @@
     "@types/dotenv": "^8.2.0",
     "@types/mysql": "^2.15.9",
     "types/mysql2": "git://github.com/types/mysql2.git",
+    "@types/bluebird": "^3.5.30",
     "dotenv": "^5.0.1",
     "imap": "^0.8.19",
     "imap-simple": "^4.3.0",

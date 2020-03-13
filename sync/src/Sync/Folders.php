@@ -97,7 +97,7 @@ class Folders
                 'name' => $folderName,
                 'account_id' => $account->getId(),
                 'ignored' => $this->getIgnored($folderName),
-                'status' => FolderSyncStatus::NotSynced
+                'sync_status' => FolderSyncStatus::NotSynced
             ]);
 
             $folder->save();

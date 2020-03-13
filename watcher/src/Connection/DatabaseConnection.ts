@@ -22,8 +22,12 @@ export default class DatabaseConnection {
         return this.mysql2 != null;
     }
 
-    async query(sql: string): Promise<mysql.RowDataPacket[]>
+    async query(sql: string, values?: any | any[] | { [param: string]: any }): Promise<mysql.RowDataPacket[]>
     {
-        return await this.mysql2.query<mysql.RowDataPacket[]>(sql);
+        if (values) {
+            return await this.mysql2.query<mysql.RowDataPacket[]>(sql, values);
+        } else {
+            return await this.mysql2.query<mysql.RowDataPacket[]>(sql);
+        }
     }
 }
