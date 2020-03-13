@@ -22,7 +22,6 @@ class SyncConsole extends Console
     public $sleep;
     public $create;
     public $folder;
-    public $email;
     public $daemon;
     public $actions;
     public $verbose;

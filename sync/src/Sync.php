@@ -59,7 +59,6 @@ class Sync
     private $maxRetries = 5;
     private $retriesFolders;
     private $retriesMessages;
-    private $email;
     private $ignoredFolders;
 
     // Config
