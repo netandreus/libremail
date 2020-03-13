@@ -414,6 +414,15 @@ class Sync
                 // going to run again in 15 minutes, why not just do two passes
                 // and download any extra messages while we can?
                 $this->syncMessages($account, $folders);
+
+                // Third pass. If during account sync some folders, already marked as'synced'
+                // have become 'synced_need_resync' (by watcher) => we need to resync them one more time.
+                $syncedNeedResyncFolders = array_filter($folderModel->getByAccount($account->getId()), function ($folder) {
+                    /** @var FolderModel $folder */
+                    return $folder->getSyncStatus() == FolderSyncStatus::SyncedNeedResync;
+                });
+                $this->syncMessages($account, $syncedNeedResyncFolders);
+
             }
         } catch (PDOException $e) {
             throw $e;

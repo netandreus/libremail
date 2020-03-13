@@ -102,4 +102,16 @@ export default class Server
         let sql = "UPDATE `folders` SET sync_status = ? WHERE account_id = ? AND name = ?";
         await this.dbConnection.query(sql, [status, account.id, folder]);
     }
+
+    async getAccountFolderNames(account: Account): Promise<string[]>
+    {
+        let sql =
+            "SELECT name " +
+            "FROM `folders` " +
+            "WHERE account_id = ?";
+        let [rows, fields] = await this.dbConnection.query(sql, [account.id]);
+        return rows.map((row) => {
+            return row['name'];
+        });
+    }
 }

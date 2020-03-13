@@ -44,38 +44,41 @@ dotEnv.config();
         console.log('[ ERROR ] Can not connect to one ore more accounts. Server response: '+err.message);
         process.exit(1);
     };
-    let onMail: OnMail = async function (this: ImapConnection, numNewMail: number) {
-        let watchingFolder = 'INBOX';
-        if (this.connected) {
-            console.log('[ Event ] There is '+numNewMail+' new message(s) in account '+this.account.email);
-            let [isAccountSyncing, syncInfo] = await Promise.all([
-                await server.isAccountSyncing(this.account),
-                await server.getFolderSyncInfo(this.account, watchingFolder)
-            ]);
+
+    let markFoldersForResync = async function (connection: ImapConnection, folderNames: string[]) {
+        let isAccountSyncing = await server.isAccountSyncing(connection.account);
+
+        folderNames.map(async (folderName) => {
             if (isAccountSyncing) {
-                console.log('Account is syncing now');
+                let syncInfo = await server.getFolderSyncInfo(connection.account, folderName);
                 if (syncInfo.sync_status == FolderSyncStatus.Synced) {
-                    console.log('Mark folder as '+FolderSyncStatus.SyncedNeedResync);
-                    await server.updateFolderStatus(this.account, watchingFolder, FolderSyncStatus.SyncedNeedResync);
+                    await server.updateFolderStatus(connection.account, folderName, FolderSyncStatus.SyncedNeedResync);
                 } else if (syncInfo.sync_status == FolderSyncStatus.Syncing) {
-                    console.log('Mark folder as '+FolderSyncStatus.SyncingNeedResync);
-                    await server.updateFolderStatus(this.account, watchingFolder, FolderSyncStatus.SyncingNeedResync);
+                    await server.updateFolderStatus(connection.account, folderName, FolderSyncStatus.SyncingNeedResync);
                 }
             } else {
-                console.log('Account is NOT syncing now. Start sync command.');
-                await this.runSync(this.account.email, watchingFolder);
+                await this.runSync(connection.account.email, folderName);
             }
+        });
+    };
+
+    let onMail: OnMail = async function (this: ImapConnection, numNewMail: number) {
+        if (this.connected) {
+            console.log('[ Event ] There is '+numNewMail+' new message(s) in account '+this.account.email);
+            await markFoldersForResync(this,  ['INBOX']);
         }
     };
+
     let onUpdate: OnUpdate = async function (this: ImapConnection, seqno: any, info: any) {
         console.log('[ Event ] Update message seqno: '+seqno+' in account '+this.account.email);
         console.log(info);
-        let account = this.account;
-        //await this.runSync(this.account.email);
+        let folderNames = await server.getAccountFolderNames(this.account);
+        await markFoldersForResync(this, folderNames);
     };
     let onExpunge: OnExpunge = async function (this: ImapConnection, seqno: number) {
         console.log('[ Event ] Expunge seqno: '+seqno+' in account '+this.account.email);
-        //await this.runSync(this.account.email);
+        let folderNames = await server.getAccountFolderNames(this.account);
+        await markFoldersForResync(this, folderNames);
     };
 
     await server.connectToAllImaps(onConnectionError, onMail, onUpdate, onExpunge);
