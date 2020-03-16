@@ -93,8 +93,19 @@ dotEnv.config();
         await markFoldersForResync(this, folderNames);
     };
 
-    await server.connectToAllImaps(onImapConnectionError, onMail, onUpdate, onExpunge);
-    console.log('Connected to '+server.imapConnections.length+' imap servers.');
+    await server.connectToAllImaps(
+        onImapConnectionError,
+        onMail,
+        onUpdate,
+        onExpunge,
+        function (this: ImapConnection) {console.log('IMAP -> Ready');},
+        function (this: ImapConnection, message: string) {console.log('IMAP -> Alert');},
+        function (this: ImapConnection, uidvalidity: number) {},
+        function (this: ImapConnection, err: Error) { console.log('IMAP -> Error: '+err.message); },
+        function (this: ImapConnection, hadError: boolean) {console.log('IMAP -> Close. Had error: '+hadError);},
+        function (this: ImapConnection) {console.log('IMAP -> End');}
+    );
+    console.log('Connected to '+server.imapConnections.length+' active imap servers.');
 })();
 
 console.log('Started watcher...');

@@ -75,7 +75,7 @@ export default class ImapConnection extends AbstractConnection
                     password: account.password,
                     host: account.imapHost,
                     port: account.imapPort,
-                    tls: tls,
+                    tls: false,
                     authTimeout: authTimeout
                 }
             },
@@ -114,24 +114,31 @@ export default class ImapConnection extends AbstractConnection
 
     }
 
-    async connect(): Promise<ImapSimple>
+    async makeConnection(): Promise<ImapSimple>
     {
-        this.connection = await imaps.connect(this.options);
+        return imaps.connect(this.options);
+    }
 
-        this.connection.on('mail', this.onMail);
-        this.connection.on('update', this.onUpdate);
-        this.connection.on('expunge', this.onExpunge);
-        this.connection.on('ready', this.onReady);
-        this.connection.on('alert', this.onAlert);
-        this.connection.on('uidvalidity', this.onUidvalidity);
-        this.connection.on('error', this.onError);
-        this.connection.on('close', this.onClose);
-        this.connection.on('end', this.onEnd);
+    async connect(err?: Error): Promise<ImapSimple>
+    {
+        return super.connect(err);
+    }
+
+    async onConnected(connection: ImapSimple)
+    {
+        connection.on('mail', this.onMail);
+        connection.on('update', this.onUpdate);
+        connection.on('expunge', this.onExpunge);
+        connection.on('ready', this.onReady);
+        connection.on('alert', this.onAlert);
+        connection.on('uidvalidity', this.onUidvalidity);
+        connection.on('error', this.onError);
+        connection.on('close', this.onClose);
+        connection.on('end', this.onEnd);
 
         // If we does not call openBox - we can't receive events.
-        await this.connection.openBox('INBOX');
+        await connection.openBox('INBOX');
         this.connected = true; // After openBox(!), to prevent first 'mail' event, during openBox
-        return this.connection;
     }
 
     get onMail(): OnMail {
@@ -212,6 +219,15 @@ export default class ImapConnection extends AbstractConnection
 
     set connected(value: boolean) {
         this._connected = value;
+    }
+
+    async closeConnection(): Promise<void>
+    {
+        if (this.connection) {
+            await this.connection.end();
+            this.connected = false;
+        }
+        return Promise.resolve();
     }
 
     /**

@@ -1,6 +1,7 @@
 import DatabaseConnection from "../Connection/DatabaseConnection";
 import Account from "../Entity/Account";
-import ImapConnection, {OnError, OnExpunge, OnMail, OnUpdate} from "../Connection/ImapConnection";
+import {OnError} from "../Connection/AbstractConnection";
+import ImapConnection, {OnExpunge, OnMail, OnUpdate, OnReady, OnAlert, OnUidvalidity, OnClose, OnEnd} from "../Connection/ImapConnection";
 import {ImapSimple} from "imap-simple";
 import * as os from "os";
 
@@ -22,14 +23,25 @@ export default class Server
 
     async loadAccounts(): Promise<Account[]>
     {
-        let [rows, fields] = await this.dbConnection.query('SELECT * FROM accounts');
+        let [rows, fields] = await this.dbConnection.query('SELECT * FROM accounts WHERE is_active = 1');
         this._accounts = rows.map((row: Record<string, string> ) => {
             return Account.fromDatabase(row);
         });
         return this._accounts;
     }
 
-    async connectToAllImaps(onConnectionError: OnError, onMail?: OnMail, onUpdate?: OnUpdate, onExpunge?: OnExpunge): Promise<any>
+    async connectToAllImaps(
+        onConnectionError: OnError,
+        onMail?: OnMail,
+        onUpdate?: OnUpdate,
+        onExpunge?: OnExpunge,
+        onReady?: OnReady,
+        onAlert?: OnAlert,
+        onUidvalidity?: OnUidvalidity,
+        onError?: OnError,
+        onClose?: OnClose,
+        onEnd?: OnEnd
+    ): Promise<any>
     {
         let promises: Promise<ImapSimple>[];
         this.imapConnections = this.accounts.map((account: Account) => {
@@ -39,7 +51,13 @@ export default class Server
                 Number(process.env.MAIL_AUTH_TIMEOUT),
                 onMail,
                 onUpdate,
-                onExpunge
+                onExpunge,
+                onReady,
+                onAlert,
+                onUidvalidity,
+                onError,
+                onClose,
+                onEnd
             );
         });
         promises = this.imapConnections.map((connection: ImapConnection) => {

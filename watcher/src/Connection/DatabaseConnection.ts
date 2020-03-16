@@ -15,21 +15,28 @@ export default class DatabaseConnection extends AbstractConnection {
         this._connection = value;
     }
 
+    async makeConnection(): Promise<Connection>
+    {
+        return mysql.createConnection(this.options);
+    }
+
     async connect(err?: MysqlError): Promise<Connection>
     {
-        if (this.attemptsMade == this.reconnectOptions.attempts) {
-            return Promise.reject(err);
+        return super.connect(err);
+    }
+
+    async closeConnection(): Promise<void>
+    {
+        if (this.connection) {
+            await this.connection.end();
         }
-        this.connection = await mysql.createConnection(this.options).catch(async (err) => {
-            await this.sleep(this.reconnectOptions.timeout);
-            console.log('[ Database ] Try to connect: '+this.attemptsMade);
-            this.attemptsMade++;
-            // Error, occurs during initial connect
-            await this.connect(err);
-        });
+        return Promise.resolve();
+    }
+
+    async onConnected(connection: Connection)
+    {
         // Error, occurs after connection is established
-        this.connection.on('error', this.onError);
-        return this.connection;
+        connection.on('error', this.onError);
     }
 
     async query(sql: string, values?: any | any[] | { [param: string]: any }): Promise<mysql.RowDataPacket[]>
