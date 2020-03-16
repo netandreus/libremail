@@ -86,11 +86,13 @@ export default abstract class AbstractConnection
         if (this.attemptsMade == this.reconnectOptions.attempts) {
             return Promise.reject(err);
         }
-        // @todo thinking, this is some race between callbacks. Gate needed for them.
-        this.connection = await this.makeConnection().catch(async (err) => {
+        if (this.connection) {
             await this.closeConnection();
             this.connection = null;
             console.log('Connection closed. Start waiting for '+this.reconnectOptions.timeout);
+        }
+        // @todo thinking, this is some race between callbacks. Gate needed for them.
+        this.connection = await this.makeConnection().catch(async (err) => {
             await this.sleep(this.reconnectOptions.timeout);
             console.log('[ '+this.constructor.name+' ] Try to connect: '+this.attemptsMade);
             this.attemptsMade++;

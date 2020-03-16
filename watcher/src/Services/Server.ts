@@ -49,6 +49,7 @@ export default class Server
                 account,
                 Boolean(process.env.MAIL_TLS),
                 Number(process.env.MAIL_AUTH_TIMEOUT),
+                Number(process.env.MAIL_CONN_TIMEOUT),
                 onMail,
                 onUpdate,
                 onExpunge,

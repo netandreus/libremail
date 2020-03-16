@@ -58,6 +58,7 @@ export default class ImapConnection extends AbstractConnection
         account: Account,
         tls: boolean,
         authTimeout: number,
+        connTimeout: number,
         onMail?: OnMail,
         onUpdate?: OnUpdate,
         onExpunge?: OnExpunge,
@@ -76,7 +77,8 @@ export default class ImapConnection extends AbstractConnection
                     host: account.imapHost,
                     port: account.imapPort,
                     tls: false,
-                    authTimeout: authTimeout
+                    authTimeout: authTimeout,
+                    connTimeout: connTimeout
                 }
             },
             {
