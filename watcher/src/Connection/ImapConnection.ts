@@ -4,6 +4,8 @@ import {exec} from "ts-process-promises";
 import {container} from "tsyringe";
 import DatabaseConnection from "./DatabaseConnection";
 import Server from "../Services/Server";
+import AbstractConnection, {OnError} from "./AbstractConnection";
+import {Connection} from "types/mysql2/promise";
 let imaps = require('imap-simple');
 // @see https://github.com/mscdex/node-imap#connection-events
 export type OnMail = (numNewMail: number) => void;
@@ -12,7 +14,6 @@ export type OnExpunge = (seqno: number) => void;
 export type OnReady = () => void;
 export type OnAlert = (message: string) => void;
 export type OnUidvalidity = (uidvalidity: number) => void;
-export type OnError = (err: Error) => void;
 export type OnClose = (hadError: boolean) => void;
 export type OnEnd = () => void;
 
@@ -27,21 +28,31 @@ type ConnectionOptions = {
     }
 };
 
-export default class ImapConnection
+export default class ImapConnection extends AbstractConnection
 {
-    private readonly connectOptions: ConnectionOptions;
-    private _account: Account;
-    private _imap?: ImapSimple;
+    protected _connection: ImapSimple;
+
+    /**
+     * Set after openBox(!), to prevent first 'mail' event, during openBox
+     */
     private _connected: boolean;
+    private _account: Account;
     private _onMail: OnMail;
     private _onUpdate: OnUpdate;
     private _onExpunge: OnExpunge;
     private _onReady: OnReady;
     private _onAlert: OnAlert;
     private _onUidvalidity: OnUidvalidity;
-    private _onError: OnError;
     private _onClose: OnClose;
     private _onEnd: OnEnd;
+
+    get connection(): ImapSimple {
+        return this._connection;
+    }
+
+    set connection(value: ImapSimple) {
+        this._connection = value;
+    }
 
     constructor(
         account: Account,
@@ -57,17 +68,26 @@ export default class ImapConnection
         onClose?: OnClose,
         onEnd?: OnEnd
     ) {
+        super(
+            {
+                imap: {
+                    user: account.email,
+                    password: account.password,
+                    host: account.imapHost,
+                    port: account.imapPort,
+                    tls: tls,
+                    authTimeout: authTimeout
+                }
+            },
+            {
+                timeout: 300,
+                attempts: 3
+            },
+            onError? onError : () => {}
+            );
+        this.connected = false;
         this.account = account;
-        this.connectOptions = {
-            imap: {
-                user: account.email,
-                password: account.password,
-                host: account.imapHost,
-                port: account.imapPort,
-                tls: tls,
-                authTimeout: authTimeout
-            }
-        };
+
         this.onMail = onMail ? onMail : () => {};
         this.onMail = this.onMail.bind(this);
 
@@ -86,46 +106,32 @@ export default class ImapConnection
         this.onUidvalidity = onUidvalidity ? onUidvalidity : () => {};
         this.onUidvalidity = this.onUidvalidity.bind(this);
 
-        this.onError = onError ? onError : () => {};
-        this.onError = this.onError.bind(this);
-
         this.onClose = onClose ? onClose : () => {};
         this.onClose = this.onClose.bind(this);
 
         this.onEnd = onEnd ? onEnd : () => {};
         this.onEnd = this.onEnd.bind(this);
 
-        this.imap = null;
-        this.connected = false;
     }
 
     async connect(): Promise<ImapSimple>
     {
-        this.imap = await imaps.connect(this.connectOptions);
+        this.connection = await imaps.connect(this.options);
 
-        this.imap.on('mail', this.onMail);
-        this.imap.on('update', this.onUpdate);
-        this.imap.on('expunge', this.onExpunge);
-        this.imap.on('ready', this.onReady);
-        this.imap.on('alert', this.onAlert);
-        this.imap.on('uidvalidity', this.onUidvalidity);
-        this.imap.on('error', this.onError);
-        this.imap.on('close', this.onClose);
-        this.imap.on('end', this.onEnd);
+        this.connection.on('mail', this.onMail);
+        this.connection.on('update', this.onUpdate);
+        this.connection.on('expunge', this.onExpunge);
+        this.connection.on('ready', this.onReady);
+        this.connection.on('alert', this.onAlert);
+        this.connection.on('uidvalidity', this.onUidvalidity);
+        this.connection.on('error', this.onError);
+        this.connection.on('close', this.onClose);
+        this.connection.on('end', this.onEnd);
 
         // If we does not call openBox - we can't receive events.
-        await this.imap.openBox('INBOX');
+        await this.connection.openBox('INBOX');
         this.connected = true; // After openBox(!), to prevent first 'mail' event, during openBox
-        return this.imap;
-    }
-
-
-    get imap(): ImapSimple {
-        return this._imap;
-    }
-
-    set imap(value: ImapSimple) {
-        this._imap = value;
+        return this.connection;
     }
 
     get onMail(): OnMail {
@@ -182,14 +188,6 @@ export default class ImapConnection
 
     set onUidvalidity(value: OnUidvalidity) {
         this._onUidvalidity = value;
-    }
-
-    get onError(): OnError {
-        return this._onError;
-    }
-
-    set onError(value: OnError) {
-        this._onError = value;
     }
 
     get onClose(): OnClose {

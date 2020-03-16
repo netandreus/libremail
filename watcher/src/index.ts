@@ -27,7 +27,16 @@ dotEnv.config();
         password: process.env.DB_PASSWORD,
         database: process.env.DB_DATABASE
     };
-    let databaseConnection = new DatabaseConnection(mysqlOptions);
+    let onDBConnectionError = function (this: DatabaseConnection, err: Error)
+    {
+        console.log('[ ERROR ] Can not connect to database. Server response: '+err.message);
+        process.exit(1);
+    };
+    let databaseConnection = new DatabaseConnection(mysqlOptions, {
+        timeout: 300,
+        attempts: 3
+    }, onDBConnectionError);
+
 
     // Server
     let server = new Server(databaseConnection);
@@ -40,7 +49,7 @@ dotEnv.config();
     console.log('Loaded '+server.accounts.length+' accounts');
 
     // Callbacks for events
-    let onConnectionError = function (err: Error) {
+    let onImapConnectionError = function (this: ImapConnection, err: Error) {
         console.log('[ ERROR ] Can not connect to one ore more accounts. Server response: '+err.message);
         process.exit(1);
     };
@@ -81,7 +90,7 @@ dotEnv.config();
         await markFoldersForResync(this, folderNames);
     };
 
-    await server.connectToAllImaps(onConnectionError, onMail, onUpdate, onExpunge);
+    await server.connectToAllImaps(onImapConnectionError, onMail, onUpdate, onExpunge);
     console.log('Connected to '+server.imapConnections.length+' imap servers.');
 })();
 
