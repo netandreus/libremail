@@ -28,8 +28,8 @@ export default abstract class AbstractConnection
         this.connection = null;
         this.attemptsMade = 0;
         this.reconnectOptions = {
-            timeout: 500,
-            attempts: 3
+            timeout: reconnectOptions.timeout,
+            attempts: reconnectOptions.attempts
         };
 
         this.onError = onError ? onError : () => {};
@@ -49,7 +49,7 @@ export default abstract class AbstractConnection
         // this.onError = this.onError.bind(this);
     }
 
-    private async sleep(ms: number): Promise<{}>
+    protected async sleep(ms: number): Promise<{}>
     {
         return new Promise(resolve => setTimeout(resolve, ms));
     }

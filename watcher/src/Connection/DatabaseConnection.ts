@@ -1,6 +1,7 @@
 import * as mysql from 'mysql2/promise';
 import {Connection} from "types/mysql2/promise";
 import AbstractConnection from "./AbstractConnection";
+import {MysqlError} from "mysql";
 
 export default class DatabaseConnection extends AbstractConnection {
 
@@ -14,15 +15,18 @@ export default class DatabaseConnection extends AbstractConnection {
         this._connection = value;
     }
 
-    async connect(): Promise<Connection>
+    async connect(err?: MysqlError): Promise<Connection>
     {
-        this.connection = await mysql.createConnection(this.options).catch((err) => {
-            // Error, occurs during initial connect
-            this.onError(err);
-        });
-        if (!this.connection) {
-            return Promise.reject('[ Error ] Connection error');
+        if (this.attemptsMade == this.reconnectOptions.attempts) {
+            return Promise.reject(err);
         }
+        this.connection = await mysql.createConnection(this.options).catch(async (err) => {
+            await this.sleep(this.reconnectOptions.timeout);
+            console.log('[ Database ] Try to connect: '+this.attemptsMade);
+            this.attemptsMade++;
+            // Error, occurs during initial connect
+            await this.connect(err);
+        });
         // Error, occurs after connection is established
         this.connection.on('error', this.onError);
         return this.connection;

@@ -12,6 +12,7 @@ import {exec, ExecResult} from 'ts-process-promises';
 import * as os from 'os';
 import {PromiseWithEvents} from "ts-process-promises/lib/PromiseWithEvents";
 import {FolderSyncStatus} from "./Enum/FolderSyncStatus";
+import {MysqlError} from "mysql";
 
 dotEnv.config();
 
@@ -27,22 +28,24 @@ dotEnv.config();
         password: process.env.DB_PASSWORD,
         database: process.env.DB_DATABASE
     };
-    let onDBConnectionError = function (this: DatabaseConnection, err: Error)
-    {
-        console.log('[ ERROR ] Can not connect to database. Server response: '+err.message);
+    let shutdownWithError = function (err: MysqlError) {
+        console.log('[ Database ] Can not connect. Server error code: '+err.code+', Server response: '+err.message);
         process.exit(1);
     };
+    let onDBConnectionError = async function (this: DatabaseConnection, err: Error)
+    {
+        await databaseConnection.connect().catch(shutdownWithError);
+    };
     let databaseConnection = new DatabaseConnection(mysqlOptions, {
-        timeout: 300,
+        timeout: 900,
         attempts: 3
     }, onDBConnectionError);
-
 
     // Server
     let server = new Server(databaseConnection);
     container.register(Server, { useValue: server });
 
-    await databaseConnection.connect();
+    await databaseConnection.connect().catch(shutdownWithError);
     console.log('[ MySQL ] Connected');
 
     await server.loadAccounts();
