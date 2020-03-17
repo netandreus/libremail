@@ -81,7 +81,7 @@ export default abstract class AbstractConnection
 
     abstract async onConnected(connection: any): Promise<any>;
 
-    async connect(err?: Error): Promise<any>
+    async connect(attempts, timeout, err?: Error): Promise<any>
     {
         let callback = (resolve, reject, attemptCount: number = 0) => {
             this.makeConnection()
@@ -92,11 +92,14 @@ export default abstract class AbstractConnection
                 })
                 .catch(function (e) {
                     console.log('Try ...'+attemptCount);
-                    if (attemptCount > 3) {
+                    if (attemptCount > attempts) {
                         reject(e);
                         return;
                     }
-                    callback(resolve, reject, ++attemptCount);
+                    let timeoutPromise = new Promise(resolve => setTimeout(resolve, timeout));
+                    timeoutPromise.then(() => {
+                        callback(resolve, reject, ++attemptCount);
+                    });
                 });
         };
         return new Promise<any>(callback);

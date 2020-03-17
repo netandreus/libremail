@@ -45,7 +45,10 @@ dotEnv.config();
     let server = new Server(databaseConnection);
     container.register(Server, { useValue: server });
 
-    await databaseConnection.connect().catch(shutdownWithError);
+    await databaseConnection.connect(
+        Number(process.env.MAX_ATTEMPTS_COUNT),
+        Number(process.env.ATTEMPTS_TIMEOUT)
+    ).catch(shutdownWithError);
     console.log('[ MySQL ] Connected');
 
     await server.loadAccounts();

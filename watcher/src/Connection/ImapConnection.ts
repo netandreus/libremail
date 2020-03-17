@@ -121,9 +121,9 @@ export default class ImapConnection extends AbstractConnection
         return imaps.connect(this.options);
     }
 
-    async connect(err?: Error): Promise<ImapSimple>
+    async connect(attempts: number = 3, timeout: number = 300, err?: Error): Promise<ImapSimple>
     {
-        return super.connect(err);
+        return super.connect(attempts, timeout, err);
     }
 
     async onConnected(connection: ImapSimple)

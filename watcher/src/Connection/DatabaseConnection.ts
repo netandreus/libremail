@@ -20,9 +20,9 @@ export default class DatabaseConnection extends AbstractConnection {
         return mysql.createConnection(this.options);
     }
 
-    async connect(err?: MysqlError): Promise<Connection>
+    async connect(attempts: number = 3, timeout: number = 300, err?: MysqlError): Promise<Connection>
     {
-        return super.connect(err);
+        return super.connect(attempts, timeout, err);
     }
 
     async closeConnection(): Promise<void>
