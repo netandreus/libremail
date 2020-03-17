@@ -81,9 +81,13 @@ export default abstract class AbstractConnection
 
     abstract async onConnected(connection: any): Promise<any>;
 
-    async connect(attempts, timeout, err?: Error): Promise<any>
+    async connect(err?: Error): Promise<any>
     {
         let callback = (resolve, reject, attemptCount: number = 0) => {
+            let [attempts, timeout] = [
+                this.reconnectOptions.attempts,
+                this.reconnectOptions.timeout
+            ];
             this.makeConnection()
                 .then((connect) => {
                     this.connection = connect;

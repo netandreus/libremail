@@ -63,10 +63,7 @@ export default class Server
             );
         });
         promises = this.imapConnections.map((connection: ImapConnection) => {
-            return connection.connect(
-                Number(process.env.MAX_ATTEMPTS_COUNT),
-                Number(process.env.ATTEMPTS_TIMEOUT)
-            );
+            return connection.connect();
         });
         await Promise.all(promises).catch(onConnectionError);
     }

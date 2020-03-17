@@ -37,18 +37,15 @@ dotEnv.config();
         await databaseConnection.connect().catch(shutdownWithError);
     };
     let databaseConnection = new DatabaseConnection(mysqlOptions, {
-        timeout: 900,
-        attempts: 3
+        timeout: Number(process.env.MAX_ATTEMPTS_COUNT),
+        attempts:  Number(process.env.ATTEMPTS_TIMEOUT)
     }, onDBConnectionError);
 
     // Server
     let server = new Server(databaseConnection);
     container.register(Server, { useValue: server });
 
-    await databaseConnection.connect(
-        Number(process.env.MAX_ATTEMPTS_COUNT),
-        Number(process.env.ATTEMPTS_TIMEOUT)
-    ).catch(shutdownWithError);
+    await databaseConnection.connect().catch(shutdownWithError);
     console.log('[ MySQL ] Connected');
 
     await server.loadAccounts();
