@@ -83,26 +83,46 @@ export default abstract class AbstractConnection
 
     async connect(err?: Error): Promise<any>
     {
-        if (this.attemptsMade == this.reconnectOptions.attempts) {
-            return Promise.reject(err);
-        }
-        if (this.connection) {
-            await this.closeConnection();
-            this.connection = null;
-            console.log('Connection closed. Start waiting for '+this.reconnectOptions.timeout);
-        }
-        // @todo thinking, this is some race between callbacks. Gate needed for them.
-        this.connection = await this.makeConnection().catch(async (err) => {
-            await this.sleep(this.reconnectOptions.timeout);
-            console.log('[ '+this.constructor.name+' ] Try to connect: '+this.attemptsMade);
-            this.attemptsMade++;
-            // Error, occurs during initial connect
-            this.connection = await this.connect(err);
-            return this.connection;
-        });
-        this.onConnected(this.connection);
-        return this.connection;
+        let callback = (resolve, reject, attemptCount: number = 0) => {
+            this.makeConnection()
+                .then((connect) => {
+                    this.connection = connect;
+                    this.onConnected(this.connection);
+                    resolve(connect);
+                })
+                .catch(function (e) {
+                    console.log('Try ...'+attemptCount);
+                    if (attemptCount > 3) {
+                        reject(e);
+                        return;
+                    }
+                    callback(resolve, reject, ++attemptCount);
+                });
+        };
+        return new Promise<any>(callback);
     }
+
+    // async connectOld(err?: Error): Promise<any>
+    // {
+    //     if (this.attemptsMade == this.reconnectOptions.attempts) {
+    //         return Promise.reject(err);
+    //     }
+    //     let isRejected = false;
+    //     this.connection = await this.makeConnection()
+    //         .catch(async (err) => {
+    //             await this.sleep(this.reconnectOptions.timeout);
+    //             console.log('[ '+this.constructor.name+' ] Try to connect: '+this.attemptsMade);
+    //             this.attemptsMade++;
+    //             // Error, occurs during initial connect
+    //             this.connection = await this.connect(err);
+    //             isRejected = true;
+    //             return this.connection;
+    //         });
+    //     if (!isRejected) {
+    //         this.onConnected(this.connection);
+    //         return this.connection;
+    //     }
+    // }
 
     abstract async closeConnection(): Promise<void>;
 

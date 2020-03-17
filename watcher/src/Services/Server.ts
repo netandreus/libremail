@@ -19,6 +19,7 @@ export default class Server
 
     constructor(dbConnection: DatabaseConnection) {
         this.dbConnection = dbConnection;
+        this.imapConnections = [];
     }
 
     async loadAccounts(): Promise<Account[]>

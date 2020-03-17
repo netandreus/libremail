@@ -76,7 +76,7 @@ export default class ImapConnection extends AbstractConnection
                     password: account.password,
                     host: account.imapHost,
                     port: account.imapPort,
-                    tls: false,
+                    tls: false, // tls: tls
                     authTimeout: authTimeout,
                     connTimeout: connTimeout
                 }
@@ -128,6 +128,7 @@ export default class ImapConnection extends AbstractConnection
 
     async onConnected(connection: ImapSimple)
     {
+        console.log('calling onConnected...');
         connection.on('mail', this.onMail);
         connection.on('update', this.onUpdate);
         connection.on('expunge', this.onExpunge);
