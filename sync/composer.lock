@@ -535,17 +535,17 @@
             "time": "2019-01-07T13:39:13+00:00"
         },
         {
-            "name": "particlebits/imap",
-            "version": "2.0.9",
+            "name": "netandreus/imap",
+            "version": "2.0.10",
             "source": {
                 "type": "git",
-                "url": "https://github.com/ParticleBits/imap.git",
-                "reference": "a3d2a089d7f39364ca21045b4e8141d97cded772"
+                "url": "https://github.com/netandreus/imap.git",
+                "reference": "186ef1cc174136d21181549fb7761332247992d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ParticleBits/imap/zipball/a3d2a089d7f39364ca21045b4e8141d97cded772",
-                "reference": "a3d2a089d7f39364ca21045b4e8141d97cded772",
+                "url": "https://api.github.com/repos/netandreus/imap/zipball/186ef1cc174136d21181549fb7761332247992d6",
+                "reference": "186ef1cc174136d21181549fb7761332247992d6",
                 "shasum": ""
             },
             "require": {
@@ -579,7 +579,7 @@
                 "mail",
                 "php"
             ],
-            "time": "2019-07-07T18:23:38+00:00"
+            "time": "2020-03-17T15:06:38+03:00"
         },
         {
             "name": "particlebits/pdo",

@@ -7,12 +7,26 @@
             "src/Functions.php"
         ]
     },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "netandreus/imap",
+                "version": "2.0.10",
+                "source": {
+                    "url": "git@github.com:netandreus/imap.git",
+                    "type": "git",
+                    "reference": "186ef1c"
+                }
+            }
+        }
+    ],
     "require": {
         "php": ">=7.0",
         "ext-pdo": "*",
         "ext-iconv": "*",
         "ext-mbstring": "*",
-        "particlebits/imap": "^2.0",
+        "netandreus/imap": "2.0.10",
         "particlebits/pdo": "@dev",
         "particlebits/zend-mail": "@dev",
         "particlebits/zend-mime": "@dev",
