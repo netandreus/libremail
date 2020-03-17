@@ -7,6 +7,10 @@ export default abstract class AbstractConnection
 {
     private readonly _options: {};
     protected _connection: {};
+    /**
+     * Set after openBox(!), to prevent first 'mail' event, during openBox
+     */
+    private _connected: boolean;
     private _onError: OnError;
     private _reconnectOptions: ReconnectOptions;
     /**
@@ -21,6 +25,7 @@ export default abstract class AbstractConnection
     ) {
         this._options = options;
         this.connection = null;
+        this.connected = false;
         this.attemptsMade = 0;
         this.reconnectOptions = {
             timeout: reconnectOptions.timeout,
@@ -30,6 +35,14 @@ export default abstract class AbstractConnection
             await this.connect().catch(onError);
         };
         this.onError = callback.bind(this);
+    }
+
+    get connected(): boolean {
+        return this._connected;
+    }
+
+    set connected(value: boolean) {
+        this._connected = value;
     }
 
     protected async sleep(ms: number): Promise<{}>
@@ -92,7 +105,9 @@ export default abstract class AbstractConnection
             this.makeConnection()
                 .then((connect) => {
                     this.connection = connect;
-                    this.onConnected(this.connection);
+                    this.onConnected(this.connection).then((connection) => {
+                        this.connected = true;
+                    });
                     console.log('[ '+this.constructor.name+' ] Connected');
                     resolve(connect);
                 })
@@ -110,28 +125,6 @@ export default abstract class AbstractConnection
         };
         return new Promise<any>(callback);
     }
-
-    // async connectOld(err?: Error): Promise<any>
-    // {
-    //     if (this.attemptsMade == this.reconnectOptions.attempts) {
-    //         return Promise.reject(err);
-    //     }
-    //     let isRejected = false;
-    //     this.connection = await this.makeConnection()
-    //         .catch(async (err) => {
-    //             await this.sleep(this.reconnectOptions.timeout);
-    //             console.log('[ '+this.constructor.name+' ] Try to connect: '+this.attemptsMade);
-    //             this.attemptsMade++;
-    //             // Error, occurs during initial connect
-    //             this.connection = await this.connect(err);
-    //             isRejected = true;
-    //             return this.connection;
-    //         });
-    //     if (!isRejected) {
-    //         this.onConnected(this.connection);
-    //         return this.connection;
-    //     }
-    // }
 
     abstract async closeConnection(): Promise<void>;
 

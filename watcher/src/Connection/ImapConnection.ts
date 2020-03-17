@@ -32,10 +32,6 @@ export default class ImapConnection extends AbstractConnection
 {
     protected _connection: ImapSimple;
 
-    /**
-     * Set after openBox(!), to prevent first 'mail' event, during openBox
-     */
-    private _connected: boolean;
     private _account: Account;
     private _onMail: OnMail;
     private _onUpdate: OnUpdate;
@@ -128,7 +124,11 @@ export default class ImapConnection extends AbstractConnection
 
     async onConnected(connection: ImapSimple)
     {
-        console.log('calling onConnected...');
+        // Add default listeners
+        connection.on('close',  (hadError) => {
+            this.connected = false;
+        });
+        // Add custom listeners
         connection.on('mail', this.onMail);
         connection.on('update', this.onUpdate);
         connection.on('expunge', this.onExpunge);
@@ -141,7 +141,6 @@ export default class ImapConnection extends AbstractConnection
 
         // If we does not call openBox - we can't receive events.
         await connection.openBox('INBOX');
-        this.connected = true; // After openBox(!), to prevent first 'mail' event, during openBox
     }
 
     get onMail(): OnMail {
@@ -214,14 +213,6 @@ export default class ImapConnection extends AbstractConnection
 
     set onEnd(value: OnEnd) {
         this._onEnd = value;
-    }
-
-    get connected(): boolean {
-        return this._connected;
-    }
-
-    set connected(value: boolean) {
-        this._connected = value;
     }
 
     async closeConnection(): Promise<void>
