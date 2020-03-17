@@ -540,12 +540,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/netandreus/imap.git",
-                "reference": "186ef1cc174136d21181549fb7761332247992d6"
+                "reference": "e39be5439f554edfe7653b360844ba5f3e73b1ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/netandreus/imap/zipball/186ef1cc174136d21181549fb7761332247992d6",
-                "reference": "186ef1cc174136d21181549fb7761332247992d6",
+                "url": "https://api.github.com/repos/netandreus/imap/zipball/e39be5439f554edfe7653b360844ba5f3e73b1ea",
+                "reference": "e39be5439f554edfe7653b360844ba5f3e73b1ea",
                 "shasum": ""
             },
             "require": {

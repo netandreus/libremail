@@ -16,7 +16,7 @@
                 "source": {
                     "url": "git@github.com:netandreus/imap.git",
                     "type": "git",
-                    "reference": "186ef1c"
+                    "reference": "e39be54"
                 }
             }
         }
