@@ -32,21 +32,16 @@ dotEnv.config();
         console.log('[ Database ] Can not connect. Server error code: '+err.code+', Server response: '+err.message);
         process.exit(1);
     };
-    let onDBConnectionError = async function (this: DatabaseConnection, err: Error)
-    {
-        await databaseConnection.connect().catch(shutdownWithError);
-    };
     let databaseConnection = new DatabaseConnection(mysqlOptions, {
-        timeout: Number(process.env.MAX_ATTEMPTS_COUNT),
-        attempts:  Number(process.env.ATTEMPTS_TIMEOUT)
-    }, onDBConnectionError);
+        attempts: Number(process.env.MAX_ATTEMPTS_COUNT),
+        timeout:  Number(process.env.ATTEMPTS_TIMEOUT)
+    }, shutdownWithError);
 
     // Server
     let server = new Server(databaseConnection);
     container.register(Server, { useValue: server });
 
     await databaseConnection.connect().catch(shutdownWithError);
-    console.log('[ MySQL ] Connected');
 
     await server.loadAccounts();
     console.log('Loaded '+server.accounts.length+' accounts');

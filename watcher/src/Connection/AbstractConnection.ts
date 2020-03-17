@@ -26,9 +26,10 @@ export default abstract class AbstractConnection
             timeout: reconnectOptions.timeout,
             attempts: reconnectOptions.attempts
         };
-
-        this.onError = onError ? onError : () => {};
-        this.onError = this.onError.bind(this);
+        let callback  = async function (err: Error) {
+            await this.connect().catch(onError);
+        };
+        this.onError = callback.bind(this);
     }
 
     protected async sleep(ms: number): Promise<{}>
@@ -92,11 +93,12 @@ export default abstract class AbstractConnection
                 .then((connect) => {
                     this.connection = connect;
                     this.onConnected(this.connection);
+                    console.log('[ '+this.constructor.name+' ] Connected');
                     resolve(connect);
                 })
                 .catch(function (e) {
                     console.log('Try ...'+attemptCount);
-                    if (attemptCount > attempts) {
+                    if (attemptCount == attempts) {
                         reject(e);
                         return;
                     }
