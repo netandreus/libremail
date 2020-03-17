@@ -432,7 +432,8 @@ class Diagnostics
             'email' => $account['email'],
             'password' => $account['password'],
             'imap_host' => $account['imap_host'],
-            'imap_port' => $account['imap_port']
+            'imap_port' => $account['imap_port'],
+            'imap_security' => $account['imap_security']
         ]), false);
     }
 

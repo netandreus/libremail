@@ -36,7 +36,6 @@ class SyncConsole extends Console
     public function __construct(array $config)
     {
         $this->config = $config;
-
         parent::__construct();
     }
 
@@ -283,6 +282,7 @@ class SyncConsole extends Console
             $newAccount['service'],
             $newAccount['imap_host'],
             $newAccount['imap_port'],
+            $newAccount['imap_security'],
             $newAccount['smtp_host'],
             $newAccount['smtp_port']
         ) = $this->promptAccountType();
@@ -290,6 +290,7 @@ class SyncConsole extends Console
         $newAccount['name'] = $this->promptName();
         $newAccount['email'] = $this->promptEmail();
         $newAccount['password'] = $this->promptPassword();
+        $newAccount['imap_security'] = ($newAccount['imap_security'] == 'false' ? null : $newAccount['imap_security']);
 
         // Connection settings worked, save to SQL
         try {
@@ -342,10 +343,11 @@ class SyncConsole extends Console
 
         $service = strtolower($service);
         $port = $this->config['email'][$service]['port'];
+        $imapSecurity = $this->config['email'][$service]['security'];
         $smtpPort = $this->config['email'][$service]['smtp_port'];
 
         // If the service was 'other' we need to ask them for the host.
-        if ('other' === $service) {
+        if (in_array($service, ['other', 'otherssl', 'othertls', 'otherinsecure'])) {
             $host = $this->cli->input(
                 'Host address (like imap.host.com):'
             )->prompt();
@@ -357,7 +359,7 @@ class SyncConsole extends Console
             $smtpHost = $this->config['email'][$service]['smtp_host'];
         }
 
-        return [$service, $host, $port, $smtpHost, $smtpPort];
+        return [$service, $host, $port, $imapSecurity, $smtpHost, $smtpPort];
     }
 
     private function promptName()
@@ -402,10 +404,11 @@ class SyncConsole extends Console
         } catch (Exception $e) {
             $this->cli->error(
                 sprintf(
-                    "Unable to connect as '%s' to %s:%s IMAP server: %s.",
+                    "Unable to connect as '%s' to %s:%s IMAP server: %s. IMAP security: %s",
                     $account['email'],
                     $account['imap_host'],
                     $account['imap_port'],
+                    $account['imap_security'],
                     $e->getMessage()
                 ));
             $this->cli->comment(

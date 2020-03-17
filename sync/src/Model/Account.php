@@ -24,6 +24,7 @@ class Account extends Model
     public $is_active;
     public $imap_host;
     public $imap_port;
+    public $imap_security;
     public $smtp_host;
     public $smtp_port;
     public $imap_flags;
@@ -40,6 +41,7 @@ class Account extends Model
             'is_active' => $this->is_active,
             'imap_host' => $this->imap_host,
             'imap_port' => $this->imap_port,
+            'imap_security' => $this->imap_security,
             'smtp_host' => $this->smtp_host,
             'smtp_port' => $this->smtp_port,
             'imap_flags' => $this->imap_flags,
@@ -140,6 +142,7 @@ class Account extends Model
         $val->required('password', 'Password')->lengthBetween(0, 100);
         $val->optional('imap_host', 'IMAP host')->lengthBetween(0, 50);
         $val->optional('imap_port', 'IMAP port')->lengthBetween(0, 5);
+        $val->optional('imap_security', 'IMAP security')->lengthBetween(0, 3);
         $val->optional('smtp_host', 'SMTP host')->lengthBetween(0, 50);
         $val->optional('smtp_port', 'SMTP port')->lengthBetween(0, 5);
         $val->optional('imap_flags', 'IMAP flags')->lengthBetween(0, 50);
@@ -219,7 +222,24 @@ class Account extends Model
         $this->service = $config[$emailParts[1]]['key'];
         $this->imap_host = $config[$emailParts[1]]['host'];
         $this->imap_port = $config[$emailParts[1]]['port'];
+        $this->imap_security = $config[$emailParts[1]]['security'];
         $this->smtp_host = $config[$emailParts[1]]['smtp_host'];
         $this->smtp_port = $config[$emailParts[1]]['smtp_port'];
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getImapSecurity()
+    {
+        return $this->imap_security;
+    }
+
+    /**
+     * @param mixed $imap_security
+     */
+    public function setImapSecurity($imap_security)
+    {
+        $this->imap_security = $imap_security;
     }
 }

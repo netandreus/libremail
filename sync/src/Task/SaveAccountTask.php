@@ -36,6 +36,7 @@ class SaveAccountTask extends AbstractTask
             'email' => $this->email,
             'imap_host' => $this->host,
             'imap_port' => $this->port,
+            'imap_security' => 'SSL',
             'password' => $this->password
         ];
 

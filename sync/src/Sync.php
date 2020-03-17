@@ -477,7 +477,8 @@ class Sync
             $account->password,
             '',
             $attachmentsPath, [
-                Mailbox::OPT_SKIP_ATTACHMENTS => $this->quick
+                Mailbox::OPT_SKIP_ATTACHMENTS => $this->quick,
+                Mailbox::OPT_SSL => $account->imap_security ? $account->imap_security : false
             ]);
         $this->mailbox->getImapStream();
 
