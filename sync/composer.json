@@ -1,20 +1,58 @@
 {
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "App\\": "src/",
+            "Zend\\Mail\\": "vendor/netandreus/zend_mail/src/",
+            "Pb\\Imap\\": "vendor/netandreus/imap/src/"
         },
         "files": [
             "src/Functions.php"
         ]
     },
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type":"package",
+            "package": {
+                "name": "netandreus/zend_mail",
+                "version":"@dev",
+                "source": {
+                    "url": "git@github.com:netandreus/zend-mail.git",
+                    "type": "git",
+                    "reference":"develop-lsub"
+                }
+            },
+            "comments": [
+                "netandreus(particlebits)/zend-mail requires zendframework/zend-stdlib ~2.5",
+                "but it is the cause of numerous errors, and i does not include it",
+                "other netandreus(particlebits)/zend-mail requirements included to this file"
+            ]
+        },
+        {
+            "type":"package",
+            "package": {
+                "name": "netandreus/imap",
+                "version":"2.0",
+                "source": {
+                    "url": "git@github.com:netandreus/imap.git",
+                    "type": "git",
+                    "reference":"issue3"
+                }
+            }
+        }
+    ],
     "require": {
         "php": ">=7.0",
         "ext-pdo": "*",
         "ext-iconv": "*",
         "ext-mbstring": "*",
-        "particlebits/imap": "^2.0",
+        "netandreus/imap": "^2.0",
         "particlebits/pdo": "@dev",
-        "particlebits/zend-mail": "@dev",
+        "netandreus/zend_mail": "@dev",
+        "zendframework/zend-crypt": "~2.5",
+        "zendframework/zend-loader": "~2.5",
+        "zendframework/zend-mime": "~2.5",
+        "zendframework/zend-validator": "~2.5",
         "particlebits/zend-mime": "@dev",
         "pimple/pimple": "^3.2.3",
         "monolog/monolog": "^1.24",
