@@ -52,7 +52,7 @@
                 "source": {
                     "url": "git@github.com:netandreus/imap.git",
                     "type": "git",
-                    "reference":"issue3"
+                    "reference":"develop-fixes"
                 }
             }
         }
