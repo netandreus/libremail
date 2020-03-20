@@ -63,7 +63,7 @@
         "react/event-loop": "@dev",
         "cboden/ratchet": "^0.4.1",
         "evenement/evenement": "^3.0",
-        "symfony/event-dispatcher": "^3.4",
+        "symfony/event-dispatcher": "^5.0.0",
         "react/child-process": "^0.5.2",
         "mkraemer/react-pcntl": "^3.0",
         "zendframework/zend-servicemanager": "^3.4"
